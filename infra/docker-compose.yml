@@ -1,0 +1,44 @@
+name: rabin
+
+services:
+  api:
+    build: ../api
+    container_name: rabin-api
+    restart: unless-stopped
+    environment:
+      PORT: 4000
+      DB_HOST: rabin-mysql
+      DB_PORT: 3306
+      DB_USER: supreme
+      DB_PASSWORD: supreme_pass
+      DB_NAME: supreme_himalayas
+      JWT_SECRET: change-me-in-production
+      JWT_EXPIRES: 12h
+    ports:
+      - "4000:4000"
+    volumes:
+      - ../api/uploads:/app/uploads
+    networks:
+      - rabin-net
+
+  web:
+    build:
+      context: ../web
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:4000
+    container_name: rabin-web
+    restart: unless-stopped
+    environment:
+      API_INTERNAL_URL: http://rabin-api:4000
+    ports:
+      - "3000:3000"
+    networks:
+      - rabin-net
+    depends_on:
+      api:
+        condition: service_healthy
+
+networks:
+  rabin-net:
+    name: rabin-net
+    external: true
